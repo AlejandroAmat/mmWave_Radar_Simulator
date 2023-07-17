@@ -24,11 +24,62 @@ function [radar_heatmap, visible_cart_v] = main
     addpath('functions');
 
     variable_library;
+    
+    %Import an STL mesh, returning a PATCH-compatible face-vertex structure
+    fv = stlread('../../w.stl');
 
-    for CAD_idx = 1:N_CAD_car
+    points = fv.Points
+    [points_size, cdd] = size(points)
+    
+
+
+
+    %Linear interpolation of the points
+    pointsX = interp1(1:points_size, points(:,1),linspace(1,points_size,points_size*10));
+    pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
+    pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
+    pointsTotal = [pointsX' pointsY' pointsZ']/8;
+    ptCloud = pointCloud(pointsTotal);
+
+    translationx = 0.1*randi([-15, 15])
+    translationy = 0.1*randi([-15, 15])
+
+    rotz = randi([-180, 180])
+    
+
+   
+    rotationAngles = [90 0 -44];
+    
+    tform = rigidtform3d(rotationAngles,[-0.9, 0.9,0 ]);
+
+    ptCloud = pctransform(ptCloud,tform);
+    
+    % pointsTotal = ptCloud.Location;
+    % newPoint = [2, 2, 4];
+    % newPoint2 = [-2,-2,4]
+    % 
+    % pointsTotal = [pointsTotal; newPoint];
+    % pointsTotal = [pointsTotal; newPoint2];
+    % ptCloud = pointCloud(pointsTotal);
+
+
+    
+
+
+    showPCloud(ptCloud.Location)
+    title('Original Pointcloud')
+
+    
+    % Perform Delaunay triangulation
+    % load('../../CAD_model_1.mat');
+    % 
+    % pcshow(cart_v);
+    % title('STL Occluded Point Cloud');
+    for CAD_idx = 1:1
         
         % load the surface model
-        load(sprintf('../CAD/CAD_model_%d.mat',CAD_idx));
+        
+        % 
         % CAD models are loaded as point clouds of size N_pt by 3, where N_pt
         % is the number of points and 3 values are the cartesian coordinates
         % unit is mm
@@ -41,63 +92,79 @@ function [radar_heatmap, visible_cart_v] = main
 %         xlabel('x (mm)'); ylabel('y (mm)'); zlabel('z (mm)'); axis equal;
 %         set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
 
-        % store point cloud in pc (point cloud) structure
+        %store point cloud in pc (point cloud) structure
         car_v = car_v_struct;
         car_v.CAD_idx = CAD_idx;
-        car_v.N_pt = length(cart_v);
-        car_v.cart_v = cart_v;
-        car_v.lim = [min(cart_v);max(cart_v)]; % find the limits in all three dimensions 
+        car_v.N_pt = length(pointsTotal);
+        car_v.cart_v = ptCloud.Location;
+        car_v.lim = [min(ptCloud.Location);max(ptCloud.Location)]; % find the limits in all three dimensions 
         [bbox_x, bbox_y, bbox_z] = meshgrid(car_v.lim(:,1),car_v.lim(:,2),car_v.lim(:,3)); % 8 vertices of the bounding box of the point cloud
         car_v.bbox = [bbox_x(:), bbox_y(:), bbox_z(:)]; 
-        clear cart_v bbox N_pt car_idx;
+        %clear cart_v bbox N_pt car_idx;
         car1_v_origin = car_v;
+        % car_v = car_v_struct;
+        % car_v.CAD_idx = CAD_idx;
+        % car_v.N_pt = length(cart_v);
+        % car_v.cart_v = cart_v;
+        % car_v.lim = [min(cart_v);max(cart_v)]; % find the limits in all three dimensions 
+        % [bbox_x, bbox_y, bbox_z] = meshgrid(car_v.lim(:,1),car_v.lim(:,2),car_v.lim(:,3)); % 8 vertices of the bounding box of the point cloud
+        % car_v.bbox = [bbox_x(:), bbox_y(:), bbox_z(:)]; 
+        % clear cart_v bbox N_pt car_idx;
+        % car1_v_origin = car_v;
+         
+       
+        
 
         for ks = 1:N_placement_car
             car_scene_v = car1_v_origin;
 
-            %% Rotate     
-            car_scene_v.rotate = rotate_ang(randi(length(rotate_ang))); % randomly select a rotation angle and store it in the pc structure
-            car_scene_v.rotate = mod(car_scene_v.rotate*(randi(1)*2-1),180);
+            % %% Rotate     
+            % car_scene_v.rotate = rotate_ang(randi(length(rotate_ang))); % randomly select a rotation angle and store it in the pc structure
+            % car_scene_v.rotate = mod(car_scene_v.rotate*(randi(1)*2-1),180);
+            % 
+            % 
+            % % inline function for 2D rotation
+            % rotate2d =  @(x, M) (x(:, 1:2) * M);
+            % 
+            % rotate_angle_rad = car_scene_v.rotate/180*pi;
+            % rotation_matrix = [cos(rotate_angle_rad), -sin(rotate_angle_rad); sin(rotate_angle_rad), cos(rotate_angle_rad)]; % create rotation matrix
+            % 
+            % car_scene_v.cart_v(:,1:2) = rotate2d(car_scene_v.cart_v, rotation_matrix); % rotate the point cloud 
+            % car_scene_v.bbox(:,1:2) = rotate2d(car_scene_v.bbox, rotation_matrix); % rotate the bounding box
+            % car_scene_v.lim = [min(car_scene_v.cart_v);max(car_scene_v.cart_v)]; % update the limits in all three dimensions
+            % 
+            % %% Translation
+            % translate_x_rng = (translate_lim(1,1) - car_scene_v.lim(1,1)):translate_x_res:(translate_lim(1,2) - car_scene_v.lim(2,1)); % range of translation along x axis
+            % translate_y_rng = (translate_lim(2,1) - car_scene_v.lim(1,2)):translate_y_res:(translate_lim(2,2) - car_scene_v.lim(2,2)); % range of translation along y axis
+            % 
+            % translate_x = translate_x_rng(randi(length(translate_x_rng))); % randomly select a translation distance along x axis
+            % translate_y = translate_y_rng(randi(length(translate_y_rng))); % randomly select a translation distance along y axis
+            % translate_z = -1250; % translate the point cloud -1250mm to compensate for the height of our radar 
+            % 
+            % % translate
+            % car_scene_v.translate = [translate_x, translate_y, translate_z]; % store translation information in the pc structure
+            % car_scene_v.cart_v = car_scene_v.cart_v + car_scene_v.translate; % translate the point cloud
+            % car_scene_v.bbox = car_scene_v.bbox + car_scene_v.translate; % translate the bounding box
+            % car_scene_v.lim = [min(car_scene_v.cart_v);max(car_scene_v.cart_v)]; % update the limits in all three dimensions
+            % 
+            % % convert unit from mm to m
+            % car_scene_v.cart_v = car_scene_v.cart_v/1000; 
+            % car_scene_v.bbox = car_scene_v.bbox/1000; 
+            % 
+            % % Visulize the rotated and translated point cloud
+            % % figure; 
+            % % cart_v_plot = car_scene_v.cart_v; % downsampling when plotting
+            % % scatter3(cart_v_plot(:,1),cart_v_plot(:,2),cart_v_plot(:,3),10,'filled','k'); hold on;
+            % % scatter3(car_scene_v.bbox(:,1), car_scene_v.bbox(:,2),car_scene_v.bbox(:,3),'r'); hold on;
+            % % xlabel('x (m)'); ylabel('y (m)'); zlabel('z (m)'); axis equal;
+            % % xlim([-3 3]);
+            % % ylim([0 12]);
+            % % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
 
-            
-            % inline function for 2D rotation
-            rotate2d =  @(x, M) (x(:, 1:2) * M);
-            
-            rotate_angle_rad = car_scene_v.rotate/180*pi;
-            rotation_matrix = [cos(rotate_angle_rad), -sin(rotate_angle_rad); sin(rotate_angle_rad), cos(rotate_angle_rad)]; % create rotation matrix
-
-            car_scene_v.cart_v(:,1:2) = rotate2d(car_scene_v.cart_v, rotation_matrix); % rotate the point cloud 
-            car_scene_v.bbox(:,1:2) = rotate2d(car_scene_v.bbox, rotation_matrix); % rotate the bounding box
-            car_scene_v.lim = [min(car_scene_v.cart_v);max(car_scene_v.cart_v)]; % update the limits in all three dimensions
-
-            %% Translation
-            translate_x_rng = (translate_lim(1,1) - car_scene_v.lim(1,1)):translate_x_res:(translate_lim(1,2) - car_scene_v.lim(2,1)); % range of translation along x axis
-            translate_y_rng = (translate_lim(2,1) - car_scene_v.lim(1,2)):translate_y_res:(translate_lim(2,2) - car_scene_v.lim(2,2)); % range of translation along y axis
-            
-            translate_x = translate_x_rng(randi(length(translate_x_rng))); % randomly select a translation distance along x axis
-            translate_y = translate_y_rng(randi(length(translate_y_rng))); % randomly select a translation distance along y axis
-            translate_z = -1250; % translate the point cloud -1250mm to compensate for the height of our radar 
-
-            % translate
-            car_scene_v.translate = [translate_x, translate_y, translate_z]; % store translation information in the pc structure
-            car_scene_v.cart_v = car_scene_v.cart_v + car_scene_v.translate; % translate the point cloud
-            car_scene_v.bbox = car_scene_v.bbox + car_scene_v.translate; % translate the bounding box
-            car_scene_v.lim = [min(car_scene_v.cart_v);max(car_scene_v.cart_v)]; % update the limits in all three dimensions
-            
-            % convert unit from mm to m
-            car_scene_v.cart_v = car_scene_v.cart_v/1000; 
-            car_scene_v.bbox = car_scene_v.bbox/1000; 
-
-%             % Visulize the rotated and translated point cloud
-            figure; 
-            cart_v_plot = car_scene_v.cart_v; % downsampling when plotting
-            scatter3(cart_v_plot(:,1),cart_v_plot(:,2),cart_v_plot(:,3),10,'filled','k'); hold on;
-            scatter3(car_scene_v.bbox(:,1), car_scene_v.bbox(:,2),car_scene_v.bbox(:,3),'r'); hold on;
-            xlabel('x (m)'); ylabel('y (m)'); zlabel('z (m)'); axis equal;
-            xlim([-3 3]);
-            ylim([0 12]);
-            set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
-
+            pcshow(car_scene_v.cart_v);
+            title('Rotated and Translated Pointcloud')
+             
+            %% Modle radar point reflectors in the scene
             %% Modle radar point reflectors in the scene
             [visible_cart_v] = remove_occlusion(car_scene_v); % remove occluded body of the car
             try
@@ -111,13 +178,21 @@ function [radar_heatmap, visible_cart_v] = main
             end
             
             % Visulize the radar point reflectors
-            figure; 
-            cart_v_plot = reflector_cart_v; % downsampling when plotting
-            scatter3(cart_v_plot(:,1),cart_v_plot(:,2),cart_v_plot(:,3),10,'filled','k'); hold on;
-            xlabel('x (m)'); ylabel('y (m)'); zlabel('z (m)'); axis equal;
-            xlim([-3 3]);
-            ylim([0 12]);
-            set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+            % figure; 
+            % cart_v_plot = reflector_cart_v; % downsampling when plotting
+            % scatter3(cart_v_plot(:,1),cart_v_plot(:,2),cart_v_plot(:,3),10,'filled','k'); hold on;
+            % xlabel('x (m)'); ylabel('y (m)'); zlabel('z (m)'); axis equal;
+            % xlim([-3 3]);
+            % ylim([0 12]);
+            % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+            
+
+            % pcshow(visible_cart_v);
+            % title('occlusion')
+
+            showPCloud(reflector_cart_v)
+            title('Reflector Model')
+
 
             %% Simualte received radar signal in the receiver antenna array            
             signal_array = simulate_radar_signal(reflector_cart_v);
@@ -134,6 +209,8 @@ function [radar_heatmap, visible_cart_v] = main
             colormap jet; caxis([0 1e11]);
             xlabel('Range'); ylabel('Azimuth');
             set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+            axis off;
+            %export_fig(['ra_figure/RA_MAPs/car_pedestrian/2car_pedestrian', num2str(count_num), '.jpg'], gcf);
             
             % Visulize the radar heatmap front view
             radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
@@ -143,6 +220,9 @@ function [radar_heatmap, visible_cart_v] = main
             colormap jet; caxis([0 1e11]);
             xlabel('Azimuth'); ylabel('Elevation');
             set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+
+            
+            count_num = count_num + 1
         end
     end
 end

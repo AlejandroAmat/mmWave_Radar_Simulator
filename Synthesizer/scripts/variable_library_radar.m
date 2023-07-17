@@ -32,7 +32,7 @@ rho =  range_bin(range_bin_FoV); % range axis of output radar heatmap
 N_rho = length(rho); % number of range bins in the output radar heatmap
 
 %% antenna array
-TX_pos = [0.44,0,0]; % TX antenna position 
+TX_pos = [0,0,1]; % TX antenna position 
 % For our custombuilt radar, TX is placed 44cm to the right of the origin (RX array center)
 
 array_size = [40,40]; % antenna array size / number of elements on the x and z axis

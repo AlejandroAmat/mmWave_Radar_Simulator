@@ -55,11 +55,11 @@ function [radar_heatmap, visible_cart_v] = main
 
 
     
-    
-     % new_folder=['../results/','Tx', num2str(nTx), '-Pow', num2str(Tx_power),'dB-range', num2str( 2*range/10), 'm-BW', num2str(BW/1000000000),'GHz'];
-     % mkdir( new_folder);  
-     % fileID = fopen([new_folder,'/Transformations.txt'],"w");
-     % 
+
+     new_folder=['../results/','Tx', num2str(nTx), '-Pow', num2str(Tx_power),'dB-range', num2str( 2*range/10), 'm-BW', num2str(BW/1000000000),'GHz'];
+     mkdir( new_folder);  
+     fileID = fopen([new_folder,'/Transformations.txt'],"w");
+     
     % Perform Delaunay triangulation
     % load('../../CAD_model_1.mat');
     % 
@@ -68,11 +68,8 @@ function [radar_heatmap, visible_cart_v] = main
     for CAD_idx = 1:1000
          close all;
          
-         % translationx = 0.1*randi([-1*range,range ]);
-         % translationy = 0.1*randi([-1*range,range]);
-    
-         translationx = -5;
-         translationy = -5;
+         translationx = 0.1*randi([-1*range,range ]);
+         translationy = 0.1*randi([-1*range,range]);
     
          rotz = randi([-180, 180]);
         
@@ -227,7 +224,7 @@ function [radar_heatmap, visible_cart_v] = main
                 xlabel('Range'); ylabel('Azimuth');
                 set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
                 
-                % saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'Top.jpg'])
+                saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'Top.jpg'])
                 
                 % Visulize the radar heatmap front view
                 radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
@@ -237,18 +234,18 @@ function [radar_heatmap, visible_cart_v] = main
                 colormap jet; caxis([0 1e11]);
                 xlabel('Azimuth'); ylabel('Elevation');
                 set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
-                % saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
-                % 
-                % if (Tx==4)
-                %     fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
-                %     for i = 1:3
-                %         fprintf(fileID, '%s ', num2str(transf{i})); 
-                % 
-                % 
-                %     end
-                %     fprintf(fileID, ']\n');
-                % end
-                % save(['../results/',new_folder,'/','HeatMap',num2str(CAD_idx), '.mat'], 'radar_heatmap');
+                saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
+                
+                if (Tx==4)
+                    fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                    for i = 1:3
+                        fprintf(fileID, '%s ', num2str(transf{i})); 
+
+            
+                    end
+                    fprintf(fileID, ']\n');
+                end
+                save(['../results/',new_folder,'/','HeatMap',num2str(CAD_idx), '.mat'], 'radar_heatmap');
             end
             
             %count_num = count_num + 1

@@ -16,7 +16,7 @@ theta_res_deg = 1; % elevation resolution = 1 degree
 
 %% FMCW radar parameters
 c = 3e8; % speed of light
-fc = 77*1e9; % radar center frequeny
+fc = 60*1e9; % radar center frequeny
 lambda = c/fc; % radar wavelength
 
 BW = 1.2e9; % FMCW bandwidth = 1.2 GHz
@@ -31,10 +31,8 @@ range_bin_FoV = find((range_bin >= radar_FoV_rho(1))&(range_bin <= radar_FoV_rho
 rho =  range_bin(range_bin_FoV); % range axis of output radar heatmap
 N_rho = length(rho); % number of range bins in the output radar heatmap
 
-Tx_power=20;
-
 %% antenna array
-TX_pos = [[8,0,1];[0,-8,1];[-8,0,1];[0,8,1]]; % TX antenna position 
+TX_pos = [0.44,0,0]; % TX antenna position 
 % For our custombuilt radar, TX is placed 44cm to the right of the origin (RX array center)
 
 array_size = [40,40]; % antenna array size / number of elements on the x and z axis
@@ -45,8 +43,6 @@ array_x_idx = array_x_idx.';
 
 array_z_idx = (1:array_size(2))-ceil(array_size(2)/2);
 
-array_x_m = repmat(array_x_idx*array_gap(1),1,array_size(2));
-array_z_m = repmat(array_z_idx*array_gap(2),array_size(1),1);
 
 
   

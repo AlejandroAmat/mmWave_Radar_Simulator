@@ -24,35 +24,23 @@ function [radar_heatmap, visible_cart_v] = main
     addpath('functions');
 
     variable_library;
-    
+    variable_library_radar;
     %Import an STL mesh, returning a PATCH-compatible face-vertex structure
     fv = stlread('../../w.stl');
-
-    points = fv.Points
-    [points_size, cdd] = size(points)
+     nTx = 4;    
+    points = fv.Points;
+    [points_size, cdd] = size(points);
     
-
+    range=80;
 
 
     %Linear interpolation of the points
     pointsX = interp1(1:points_size, points(:,1),linspace(1,points_size,points_size*10));
     pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
     pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
-    pointsTotal = [pointsX' pointsY' pointsZ']/8;
-    ptCloud = pointCloud(pointsTotal);
+    pointsTotal = [pointsX' pointsY' pointsZ']/6;
+    ptCloudO = pointCloud(pointsTotal);
 
-    translationx = 0.1*randi([-15, 15])
-    translationy = 0.1*randi([-15, 15])
-
-    rotz = randi([-180, 180])
-    
-
-   
-    rotationAngles = [90 0 -44];
-    
-    tform = rigidtform3d(rotationAngles,[-0.9, 0.9,0 ]);
-
-    ptCloud = pctransform(ptCloud,tform);
     
     % pointsTotal = ptCloud.Location;
     % newPoint = [2, 2, 4];
@@ -66,17 +54,38 @@ function [radar_heatmap, visible_cart_v] = main
     
 
 
-    showPCloud(ptCloud.Location)
-    title('Original Pointcloud')
-
     
+    
+     % new_folder=['../results/','Tx', num2str(nTx), '-Pow', num2str(Tx_power),'dB-range', num2str( 2*range/10), 'm-BW', num2str(BW/1000000000),'GHz'];
+     % mkdir( new_folder);  
+     % fileID = fopen([new_folder,'/Transformations.txt'],"w");
+     % 
     % Perform Delaunay triangulation
     % load('../../CAD_model_1.mat');
     % 
     % pcshow(cart_v);
     % title('STL Occluded Point Cloud');
-    for CAD_idx = 1:1
+    for CAD_idx = 1:1000
+         close all;
+         
+         % translationx = 0.1*randi([-1*range,range ]);
+         % translationy = 0.1*randi([-1*range,range]);
+    
+         translationx = -5;
+         translationy = -5;
+    
+         rotz = randi([-180, 180]);
         
+         transf={translationx, translationy, rotz};
+            
+               
+         rotationAngles = [90 0 rotz];
+         tform = rigidtform3d(rotationAngles,[translationx, translationy, 0]);
+
+         ptCloud = pctransform(ptCloudO,tform);
+         showPCloud(ptCloud.Location)
+         title('Original Pointcloud')
+       
         % load the surface model
         
         % 
@@ -115,7 +124,8 @@ function [radar_heatmap, visible_cart_v] = main
        
         
 
-        for ks = 1:N_placement_car
+        for ks = 1:1
+            
             car_scene_v = car1_v_origin;
 
             % %% Rotate     
@@ -166,7 +176,7 @@ function [radar_heatmap, visible_cart_v] = main
              
             %% Modle radar point reflectors in the scene
             %% Modle radar point reflectors in the scene
-            [visible_cart_v] = remove_occlusion(car_scene_v); % remove occluded body of the car
+            [visible_cart_v ] = remove_occlusion(car_scene_v); % remove occluded body of the car
             try
                 reflector_cart_v = model_point_reflector(visible_cart_v,car_scene_v.bbox); % model point reflectors that reflect back to the radar receiver
             catch
@@ -192,37 +202,56 @@ function [radar_heatmap, visible_cart_v] = main
 
             showPCloud(reflector_cart_v)
             title('Reflector Model')
-
-
-            %% Simualte received radar signal in the receiver antenna array            
-            signal_array = simulate_radar_signal(reflector_cart_v);
             
-            %% Radar signal processing, generating 3D radar heatmaps
-            radar_heatmap = radar_dsp(signal_array);
+            reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
+            showPCloud(reflector_cart_v_d.Location)
+            title('Reflector Model')
 
-            % Visulize the radar heatmap top view
-            radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
-            figure
-            imagesc(radar_heatmap_top);    
-            set(gca,'XDir','reverse')
-            set(gca,'YDir','normal')
-            colormap jet; caxis([0 1e11]);
-            xlabel('Range'); ylabel('Azimuth');
-            set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
-            axis off;
-            %export_fig(['ra_figure/RA_MAPs/car_pedestrian/2car_pedestrian', num2str(count_num), '.jpg'], gcf);
+               
+                reflector_cart_v_d= reflector_cart_v_d.Location
+                for Tx=1:nTx
+                %% Simualte received radar signal in the receiver antenna array            
+                signal_array = simulate_radar_signal(reflector_cart_v_d, TX_pos(Tx,:));
+                
+                %% Radar signal processing, generating 3D radar heatmaps
+                radar_heatmap = radar_dsp(signal_array);
+                  
+               
+                % Visulize the radar heatmap top view
+                radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
+                figure
+                imagesc(radar_heatmap_top);    
+                set(gca,'XDir','reverse')
+                set(gca,'YDir','normal')
+                colormap jet; caxis([0 1e11]);
+                xlabel('Range'); ylabel('Azimuth');
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                
+                % saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'Top.jpg'])
+                
+                % Visulize the radar heatmap front view
+                radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
+                figure;
+                imagesc(radar_heatmap_front.');    
+                set(gca,'XDir','reverse')
+                colormap jet; caxis([0 1e11]);
+                xlabel('Azimuth'); ylabel('Elevation');
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                % saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
+                % 
+                % if (Tx==4)
+                %     fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                %     for i = 1:3
+                %         fprintf(fileID, '%s ', num2str(transf{i})); 
+                % 
+                % 
+                %     end
+                %     fprintf(fileID, ']\n');
+                % end
+                % save(['../results/',new_folder,'/','HeatMap',num2str(CAD_idx), '.mat'], 'radar_heatmap');
+            end
             
-            % Visulize the radar heatmap front view
-            radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
-            figure;
-            imagesc(radar_heatmap_front.');    
-            set(gca,'XDir','reverse')
-            colormap jet; caxis([0 1e11]);
-            xlabel('Azimuth'); ylabel('Elevation');
-            set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
-
-            
-            count_num = count_num + 1
+            %count_num = count_num + 1
         end
     end
 end

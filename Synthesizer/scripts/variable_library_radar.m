@@ -1,10 +1,10 @@
 %% radar Field of View (FoV)
-radar_FoV_deg = [58,121;76,107]; % azimuth and elevation field of view
+radar_FoV_deg = [40,139;67,116]; % azimuth and elevation field of view
 radar_FoV_rad = radar_FoV_deg/180*pi; % angular FoV in radian
 radar_FoV_rho = [3,15-0.125]; % range field of view
 
-N_phi = 64; % number of azimuth bins in the output radar heatmap
-N_theta = 32; % number of elevation bins in the output radar heatmap
+N_phi = 100; % number of azimuth bins in the output radar heatmap
+N_theta = 50; % number of elevation bins in the output radar heatmap
 
 phi_deg = linspace(radar_FoV_deg(1,1),radar_FoV_deg(1,2),N_phi); % azimuth axis of the output radar heatmap in degree
 theta_deg = linspace(radar_FoV_deg(2,1),radar_FoV_deg(2,2),N_theta); % elevation axis of the output radar heatmap in degree
@@ -31,10 +31,13 @@ range_bin_FoV = find((range_bin >= radar_FoV_rho(1))&(range_bin <= radar_FoV_rho
 rho =  range_bin(range_bin_FoV); % range axis of output radar heatmap
 N_rho = length(rho); % number of range bins in the output radar heatmap
 
-Tx_power=20;
+Tx_power=0.01;
+
+NoiseNo= 4.1*1e-21;
+NoisePW = NoiseNo * BW;
 
 %% antenna array
-TX_pos = [[8,0,1];[0,-8,1];[-8,0,1];[0,8,1]]; % TX antenna position 
+TX_pos = [[0,0,1]];%[0,10,1];[2.5,5,1];[-2.5,5,1]]; % TX antenna position 
 % For our custombuilt radar, TX is placed 44cm to the right of the origin (RX array center)
 
 array_size = [40,40]; % antenna array size / number of elements on the x and z axis

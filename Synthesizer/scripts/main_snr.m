@@ -1,4 +1,4 @@
-function [radar_heatmap, visible_cart_v] = main
+function [radar_heatmap, visible_cart_v] = main_snr
     % Copyright (c) 2018-2020 Junfeng Guan, Sohrab Madani, Suraj Jog, Saurabh Gupta, 
     % Haitham Hassanieh, University of Illinois at Urbana-Champaign
     % 
@@ -26,23 +26,23 @@ function [radar_heatmap, visible_cart_v] = main
     variable_library;
     variable_library_radar;
     %Import an STL mesh, returning a PATCH-compatible face-vertex structure
-    fv = stlread('../../w.stl');
+    % fv = stlread('../../w.stl');
     nTx = 1;    
-    points = fv.Points;
-    [points_size, cdd] = size(points);
+    % points = fv.Points;
+    % [points_size, cdd] = size(points);
     
     
 
 
-    %Linear interpolation of the points
-    pointsX = interp1(1:points_size, points(:,1),linspace(1,points_size,points_size*10));
-    pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
-    pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
-    pointsTotal = [pointsX' pointsY' pointsZ']/6;
-    ptCloudO = pointCloud(pointsTotal);
+    % %Linear interpolation of the points
+    % pointsX = interp1(1:points_size, points(:,1),linspace(1,points_size,points_size*10));
+    % pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
+    % pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
+    % pointsTotal = [pointsX' pointsY' pointsZ']/6;
+    % ptCloudO = pointCloud(pointsTotal);
 
     
-    % pointsTotal = ptCloud.Location;
+     
     % newPoint = [2, 2, 4];
     % newPoint2 = [-2,-2,4]
     % 
@@ -50,8 +50,40 @@ function [radar_heatmap, visible_cart_v] = main
     % pointsTotal = [pointsTotal; newPoint2];
     % ptCloud = pointCloud(pointsTotal);
 
+    pointsTotal = [0,0,0];
+
+    for x=1:10
+        for z=1:20
+            point=[0.1*x-0.5,-0.50,z*0.1];
+            pointsTotal = [pointsTotal; point];
+        end
+    end
+
+    for x=1:10
+        for z=1:20
+            point=[0.1*x-0.5,0.50,z*0.1];
+            pointsTotal = [pointsTotal; point];
+        end
+    end
+
+    for y=1:10
+        for z=1:20
+            point=[-0.50,0.1*y-0.5,z*0.1];
+            pointsTotal = [pointsTotal; point];
+        end
+    end
+    for y=1:10
+        for z=1:20
+            point=[0.50,0.1*y-0.5,z*0.1];
+            pointsTotal = [pointsTotal; point];
+        end
+    end
+    ptCloud = pointCloud(pointsTotal(2:801, :));
+    ptCloudO = ptCloud;
     
     
+
+
      directory_path = './Sim_Walking';
      txt_files = dir(fullfile(directory_path, '*.txt'))
      
@@ -67,9 +99,9 @@ function [radar_heatmap, visible_cart_v] = main
     
 
      
-     % new_folder=['../results/','NoIRS', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
-     % mkdir( new_folder);  
-     % fileID = fopen([new_folder,'/Transformations.txt'],"w");
+     new_folder=['../results/SNR/','RandomPos', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
+     mkdir( new_folder);  
+     fileID = fopen([new_folder,'/Transformations.txt'],"w");
      % 
     % Perform Delaunay triangulation
     % load('../../CAD_model_1.mat');
@@ -119,7 +151,7 @@ function [radar_heatmap, visible_cart_v] = main
         transf(U,:)={translationx, translationy};
             
                
-        rotationAngles = [90 0 0];
+        rotationAngles = [0 0 0];
         tform = rigidtform3d(rotationAngles,[translationx translationy 0]);
         
         if(U>1)
@@ -235,16 +267,16 @@ function [radar_heatmap, visible_cart_v] = main
             % 
             %% Modle radar point reflectors in the scene
             %% Modle radar point reflectors in the scene
-            [visible_cart_v ] = remove_occlusion(car_scene_v); % remove occluded body of the car
-            try
-                reflector_cart_v = model_point_reflector(visible_cart_v,car_scene_v.bbox); % model point reflectors that reflect back to the radar receiver
-            catch
-                continue;
-            end
-
-            if isempty(reflector_cart_v)
-                continue;
-            end
+            % [visible_cart_v ] = remove_occlusion(car_scene_v); % remove occluded body of the car
+            % try
+            %     reflector_cart_v = model_point_reflector(visible_cart_v,car_scene_v.bbox); % model point reflectors that reflect back to the radar receiver
+            % catch
+            %     continue;
+            % end
+            % 
+            % if isempty(reflector_cart_v)
+            %     continue;
+            % end
             
             % Visulize the radar point reflectors
             % figure; 
@@ -262,17 +294,69 @@ function [radar_heatmap, visible_cart_v] = main
             % showPCloud(reflector_cart_v, range)
             % title('Reflector Model')
             % 
-             reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
-            % showPCloud(reflector_cart_v_d.Location, range)
-            % title('Reflector Model')
+             % reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
+            showPCloud(car_v.cart_v, range)
+            title('Reflector Model')
 
                
-                reflector_cart_v_d= reflector_cart_v_d.Location
+                
                 for Tx=1:nTx
-                %% Simualte received radar signal in the receiver antenna array            
-                signal_array = simulate_radar_signal(reflector_cart_v_d, TX_pos(Tx,:));
 
-                %% Radar signal processing, generating 3D radar heatmaps
+
+                    SNR = computeSNR(nTx, Tx, ptCloud.Location, TX_pos(Tx,:))
+                    
+                    
+                    n=0;   
+                    l=0;
+                    i=0;
+                    K=1;
+                    fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                    while (n<length(ptCloud.Location))
+                        SNR_subset = SNR((1+200*l):200*(l+1) );
+                        SNR_subset_mean = mean(SNR_subset);
+                        SNR_subset_std = std(SNR_subset);
+                        
+                        
+                        fprintf(fileID, '%s,%s: [SNR: %d, SD: %d] , ', num2str(K),num2str(mod(i,4)+1),SNR_subset_mean, SNR_subset_std); 
+                        
+                        
+
+
+                        l=l+1;
+                        n=n+200;
+                        i=i+1;
+                        if(users==1)
+                         if(i==4)
+                         fprintf(fileID, ']\n');
+                         end
+                        elseif(users==2)
+                         if(i==4)
+                            
+                            K=K+1;
+                            fprintf(fileID, ']\n --->[');
+                         elseif(i==8)
+                            fprintf(fileID, ']\n');
+                         end
+                        elseif(users==3)
+                            if(i==4)
+                            
+                            K=K+1;
+                            fprintf(fileID, ']\n --->[');
+                            elseif(i==8)
+                            
+                            K=K+1;
+                            fprintf(fileID, ']\n --->[');
+                            elseif(i==12)
+                                fprintf(fileID, ']\n');
+                            end
+                        end
+                        
+                    end
+                    
+                %% Simualte received radar signal in the receiver antenna array            
+                % signal_array = simulate_radar_signal(reflector_cart_v_d, TX_pos(Tx,:));
+                % 
+                % %% Radar signal processing, generating 3D radar heatmaps
                 % radar_heatmap = radar_dsp(signal_array);
                 % 
                 % 

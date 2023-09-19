@@ -99,19 +99,15 @@ function [radar_heatmap, visible_cart_v] = main
              
             %número de antenas Tx (o array de antenas. Depende de como lo
             %hagas)
-
+            
             for Tx=1:nTx
-                %% Simualte received radar signal in the receiver antenna array
-                %Tx_Pos es el vector de posiciones de Tx. Por lo q dijo
-                %Filip solo tendrás 1
-
+                %% Simualte received radar signal in the receiver antenna array            
                 signal_array = simulate_radar_signal(reflector_cart_v_d, TX_pos(Tx,:));
 
                 %% Radar signal processing, generating 3D radar heatmaps
-                radar_heatmap = radar_dsp(signal_array);
-
-                %% Guardar datos
-                
+                % radar_heatmap = radar_dsp(signal_array);
+                % 
+                % 
                 % % Visulize the radar heatmap top view
                 % radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
                 % figure
@@ -134,11 +130,43 @@ function [radar_heatmap, visible_cart_v] = main
                 % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
                 % saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
                 % 
-  
+                % if (Tx==1)
+                %     fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                %     for U = 1:users
+                %         if(U==1) 
+                %             for i = 1:2
+                %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
+                %             end
+                % 
+                %             fprintf(fileID, ']');
+                %             if(users ~= 1)
+                %                 fprintf(fileID, ', [');
+                %             end
+                % 
+                %         elseif(U==2)
+                %             for i = 1:2
+                %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
+                %             end
+                % 
+                %             fprintf(fileID, ']');
+                %             if(users ~= 2)
+                %                 fprintf(fileID, ', [');
+                %             end
+                %         else
+                %             for i = 1:2
+                %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
+                %             end
+                % 
+                %             fprintf(fileID, ']');
+                %         end 
+                %     end
+                %     fprintf(fileID, '\n');
+                % 
+                % end
                 % save(['../results/',new_folder,'/','HeatMap',num2str(CAD_idx), '.mat'], 'radar_heatmap');
             end
             
-            
+            %count_num = count_num + 1
         
     
     

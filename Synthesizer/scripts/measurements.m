@@ -42,7 +42,7 @@ function [radar_heatmap, visible_cart_v] = main_snr
     % ptCloudO = pointCloud(pointsTotal);
 
     
-     radarTX = [0,0,1;0,0,0];
+     radarTX = [0,0,1];
     % newPoint = [2, 2, 4];
     % newPoint2 = [-2,-2,4]
     % 

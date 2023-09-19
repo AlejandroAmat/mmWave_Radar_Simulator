@@ -1,4 +1,4 @@
-function [radar_heatmap, visible_cart_v] = main_snr
+function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
     % Copyright (c) 2018-2020 Junfeng Guan, Sohrab Madani, Suraj Jog, Saurabh Gupta, 
     % Haitham Hassanieh, University of Illinois at Urbana-Champaign
     % 
@@ -27,7 +27,7 @@ function [radar_heatmap, visible_cart_v] = main_snr
     variable_library_radar;
     %Import an STL mesh, returning a PATCH-compatible face-vertex structure
     % fv = stlread('../../w.stl');
-    nTx = 1;    
+    nTx = 4;    
     % points = fv.Points;
     % [points_size, cdd] = size(points);
     
@@ -42,7 +42,7 @@ function [radar_heatmap, visible_cart_v] = main_snr
     % ptCloudO = pointCloud(pointsTotal);
 
     
-     radarTX = [0,0,1;0,0,0];
+     
     % newPoint = [2, 2, 4];
     % newPoint2 = [-2,-2,4]
     % 
@@ -59,6 +59,7 @@ function [radar_heatmap, visible_cart_v] = main_snr
         end
     end
 
+    
     for x=1:10
         for z=1:20
             point=[0.1*x-0.5,0.50,z*0.1];
@@ -68,10 +69,11 @@ function [radar_heatmap, visible_cart_v] = main_snr
 
     for y=1:10
         for z=1:20
-            point=[-0.50,0.1*y-0.5,z*0.1];
+            point=[-0.40,0.1*y-0.6,z*0.1];
             pointsTotal = [pointsTotal; point];
         end
     end
+  
     for y=1:10
         for z=1:20
             point=[0.50,0.1*y-0.5,z*0.1];
@@ -79,6 +81,7 @@ function [radar_heatmap, visible_cart_v] = main_snr
         end
     end
     ptCloud = pointCloud(pointsTotal(2:801, :));
+    %ptCloud = pointCloud(pointsTotal);
     ptCloudO = ptCloud;
     
     
@@ -97,10 +100,10 @@ function [radar_heatmap, visible_cart_v] = main_snr
         modal = file_name(6:11);
         
     
-
+        
      
-   %  new_folder=['../results/SNR/','NoIRS', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
-    % mkdir( new_folder);  
+     new_folder=['../results/SNR/','RandomIRS', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
+     mkdir( new_folder);  
      %fileID = fopen([new_folder,'/Transformations.txt'],"w");
      % 
     % Perform Delaunay triangulation
@@ -136,17 +139,24 @@ function [radar_heatmap, visible_cart_v] = main_snr
     
 
  end
-SNR_output = ones(600,4*users);  
-        SD_output = ones(600,4*users); 
+
+ SNR_output = ones(600,4*users);  
+ SD_output = ones(600,4*users);  
+
+
     for CAD_idx = 1:600
          close all;
-         
-          for CAD_idx = 1:600
-         close all;
-      
+       for k=1:4
+            x(k)=1/100* randi([-range*50, range* 50]);
+            y(k)=1/100* randi([0, range*100]);
+            z(k)=1/10* randi([0, 20]);
+        end
      
-         radarTX = [0, 0, 1;];
-            
+
+        radarTX = [x(1), 0, z(1);
+           x(2), range, z(2);
+           -range/2, y(3), z(3);
+          range/2, y(4), z(4)];  
           % translationy = 0.1*randi([1,range*2]);
           % translationx = 0.1*randi([-1*(range/2),range/2]);
     
@@ -302,136 +312,145 @@ SNR_output = ones(600,4*users);
             % title('Reflector Model')
             % 
              % reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
-            %showPCloud(car_v.cart_v, range)
-            %title('Reflector Model')
+            showPCloud(car_v.cart_v, radarTX)
+            title('Reflector Model')
 
-               
+             
                 
                 for Tx=1:nTx
 
 
-                    SNR = computeSNR(nTx, Tx, ptCloud.Location, TX_pos(Tx,:))
+                    SNR = SNRRand(users, Tx, ptCloud.Location, radarTX(Tx,:))
                     
-                    
-                    n=0;   
-                    l=0;
+
                     i=0;
-                    K=1;
-                    %fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
-                    while (n<length(ptCloud.Location))
-                        SNR_subset = SNR((1+200*l):200*(l+1) );
+                    k=0;
+                    while (i<length(SNR))
+                        SNR_subset = SNR((1+200*k):200*(k+1) );
                         SNR_subset_mean = mean(SNR_subset);
                         SNR_subset_std = std(SNR_subset);
-                        
-                        
-                        %fprintf(fileID, '%s,%s: [SNR: %d, SD: %d] , ', num2str(K),num2str(mod(i,4)+1),SNR_subset_mean, SNR_subset_std); 
-                        SD_output(CAD_idx,mod(i,4)+1 + 4*(K-1))= SNR_subset_std;
-                        SNR_output(CAD_idx,mod(i,4)+1 + 4*(K-1))= SNR_subset_mean;
-                        
-                        
-
-
-                        l=l+1;
-                        n=n+200;
-                        i=i+1;
-                        if(users==1)
-                         if(i==4)
-                         %fprintf(fileID, ']\n');
-                         end
-                        elseif(users==2)
-                         if(i==4)
-                            
-                            K=K+1;
-                            %fprintf(fileID, ']\n --->[');
-                         elseif(i==8)
-                            %fprintf(fileID, ']\n');
-                         end
-                        elseif(users==3)
-                            if(i==4)
-                            
-                            K=K+1;
-                            %fprintf(fileID, ']\n --->[');
-                            elseif(i==8)
-                            
-                            K=K+1;
-                            %fprintf(fileID, ']\n --->[');
-                            elseif(i==12)
-                                %fprintf(fileID, ']\n');
-                            end
-                        end
-                        
+                        SNR_output(CAD_idx,Tx+4*k) = SNR_subset_mean;
+                        SD_output(CAD_idx,Tx+4*k) = SNR_subset_std;
+                        i=i+200;
+                        k=k+1;
                     end
                     
-                %% Simualte received radar signal in the receiver antenna array            
-                % signal_array = simulate_radar_signal(reflector_cart_v_d, TX_pos(Tx,:));
-                % 
-                % %% Radar signal processing, generating 3D radar heatmaps
-                % radar_heatmap = radar_dsp(signal_array);
-                % 
-                % 
-                % % Visulize the radar heatmap top view
-                % radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
-                % figure
-                % imagesc(radar_heatmap_top);    
-                % set(gca,'XDir','reverse')
-                % set(gca,'YDir','normal')
-                % colormap jet; caxis([0 1e11]);
-                % xlabel('Range'); ylabel('Azimuth');
-                % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
-                % 
-                % saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'Top.jpg'])
-                % 
-                % % Visulize the radar heatmap front view
-                % radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
-                % figure;
-                % imagesc(radar_heatmap_front.');    
-                % set(gca,'XDir','reverse')
-                % colormap jet; caxis([0 1e11]);
-                % xlabel('Azimuth'); ylabel('Elevation');
-                % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
-                % saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
-                % 
-                % if (Tx==1)
+                %     n=0;   
+                %     l=0;
+                %     i=0;
+                %     K=1;
                 %     fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
-                %     for U = 1:users
-                %         if(U==1) 
-                %             for i = 1:2
-                %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
-                %             end
+                %     while (n<length(ptCloud.Location))
+                %         SNR_subset = SNR((1+200*l):200*(l+1) );
+                %         SNR_subset_mean = mean(SNR_subset);
+                %         SNR_subset_std = std(SNR_subset);
                 % 
-                %             fprintf(fileID, ']');
-                %             if(users ~= 1)
-                %                 fprintf(fileID, ', [');
-                %             end
                 % 
-                %         elseif(U==2)
-                %             for i = 1:2
-                %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
-                %             end
+                %         fprintf(fileID, '%s,%s: [SNR: %d, SD: %d] , ', num2str(K),num2str(mod(i,4)+1),SNR_subset_mean, SNR_subset_std); 
                 % 
-                %             fprintf(fileID, ']');
-                %             if(users ~= 2)
-                %                 fprintf(fileID, ', [');
-                %             end
-                %         else
-                %             for i = 1:2
-                %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
-                %             end
                 % 
-                %             fprintf(fileID, ']');
-                %         end 
+                % 
+                % 
+                %         l=l+1;
+                %         n=n+200;
+                %         i=i+1;
+                %         if(users==1)
+                %          if(i==4)
+                %          fprintf(fileID, ']\n');
+                %          end
+                %         elseif(users==2)
+                %          if(i==4)
+                % 
+                %             K=K+1;
+                %             fprintf(fileID, ']\n --->[');
+                %          elseif(i==8)
+                %             fprintf(fileID, ']\n');
+                %          end
+                %         elseif(users==3)
+                %             if(i==4)
+                % 
+                %             K=K+1;
+                %             fprintf(fileID, ']\n --->[');
+                %             elseif(i==8)
+                % 
+                %             K=K+1;
+                %             fprintf(fileID, ']\n --->[');
+                %             elseif(i==12)
+                %                 fprintf(fileID, ']\n');
+                %             end
+                %         end
+                % 
                 %     end
-                %     fprintf(fileID, '\n');
                 % 
-                % end
-                % save(['../results/',new_folder,'/','HeatMap',num2str(CAD_idx), '.mat'], 'radar_heatmap');
+                % %% Simualte received radar signal in the receiver antenna array            
+                % % signal_array = simulate_radar_signal(reflector_cart_v_d, TX_pos(Tx,:));
+                % % 
+                % % %% Radar signal processing, generating 3D radar heatmaps
+                % % radar_heatmap = radar_dsp(signal_array);
+                % % 
+                % % 
+                % % % Visulize the radar heatmap top view
+                % % radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
+                % % figure
+                % % imagesc(radar_heatmap_top);    
+                % % set(gca,'XDir','reverse')
+                % % set(gca,'YDir','normal')
+                % % colormap jet; caxis([0 1e11]);
+                % % xlabel('Range'); ylabel('Azimuth');
+                % % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                % % 
+                % % saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'Top.jpg'])
+                % % 
+                % % % Visulize the radar heatmap front view
+                % % radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
+                % % figure;
+                % % imagesc(radar_heatmap_front.');    
+                % % set(gca,'XDir','reverse')
+                % % colormap jet; caxis([0 1e11]);
+                % % xlabel('Azimuth'); ylabel('Elevation');
+                % % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                % % saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
+                % % 
+                % % if (Tx==1)
+                % %     fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                % %     for U = 1:users
+                % %         if(U==1) 
+                % %             for i = 1:2
+                % %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
+                % %             end
+                % % 
+                % %             fprintf(fileID, ']');
+                % %             if(users ~= 1)
+                % %                 fprintf(fileID, ', [');
+                % %             end
+                % % 
+                % %         elseif(U==2)
+                % %             for i = 1:2
+                % %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
+                % %             end
+                % % 
+                % %             fprintf(fileID, ']');
+                % %             if(users ~= 2)
+                % %                 fprintf(fileID, ', [');
+                % %             end
+                % %         else
+                % %             for i = 1:2
+                % %                 fprintf(fileID, '%.7f ', (transf{U, i})); 
+                % %             end
+                % % 
+                % %             fprintf(fileID, ']');
+                % %         end 
+                % %     end
+                % %     fprintf(fileID, '\n');
+                % % 
+                % % end
+                % % save(['../results/',new_folder,'/','HeatMap',num2str(CAD_idx), '.mat'], 'radar_heatmap');
             end
             
             %count_num = count_num + 1
         end
     end
-  %  save(['../results/',new_folder,'/','SNR.mat'], 'SNR_output');
-   %  save(['../results/',new_folder,'/','SD.mat'], 'SD_output');
-     end
-     
+    save(['../results/',new_folder,'/','SNR.mat'], 'SNR_output');
+    save(['../results/',new_folder,'/','SD.mat'], 'SD_output');
+    end
 end

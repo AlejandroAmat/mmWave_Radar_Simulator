@@ -263,8 +263,8 @@ function [radar_heatmap, visible_cart_v] = main
             % title('Reflector Model')
             % 
              reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
-            % showPCloud(reflector_cart_v_d.Location, range)
-            % title('Reflector Model')
+            showPCloud(reflector_cart_v_d.Location, range)
+             title('Reflector Model')
 
                
                 reflector_cart_v_d= reflector_cart_v_d.Location

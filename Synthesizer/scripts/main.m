@@ -112,26 +112,26 @@ function [radar_heatmap, visible_cart_v] = main
 
                 %% Guardar datos
                 
-                % % Visulize the radar heatmap top view
-                % radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
-                % figure
-                % imagesc(radar_heatmap_top);    
-                % set(gca,'XDir','reverse')
-                % set(gca,'YDir','normal')
-                % colormap jet; caxis([0 1e11]);
-                % xlabel('Range'); ylabel('Azimuth');
-                % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                % Visulize the radar heatmap top view
+                radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
+                figure
+                imagesc(radar_heatmap_top);    
+                set(gca,'XDir','reverse')
+                set(gca,'YDir','normal')
+                colormap jet; caxis([0 1e11]);
+                xlabel('Range'); ylabel('Azimuth');
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
                 % 
                 % saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'Top.jpg'])
                 % 
                 % % Visulize the radar heatmap front view
-                % radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
-                % figure;
-                % imagesc(radar_heatmap_front.');    
-                % set(gca,'XDir','reverse')
-                % colormap jet; caxis([0 1e11]);
-                % xlabel('Azimuth'); ylabel('Elevation');
-                % set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
+                figure;
+                imagesc(radar_heatmap_front.');    
+                set(gca,'XDir','reverse')
+                colormap jet; caxis([0 1e11]);
+                xlabel('Azimuth'); ylabel('Elevation');
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
                 % saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'Front.jpg'])
                 % 
   

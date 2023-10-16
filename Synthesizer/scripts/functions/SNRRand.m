@@ -19,8 +19,9 @@ function SNRf = simulate_radar_signal(nTx, Tx, reflector_cart_v, T_pos)
         % distance between the TX antenna and the point reflector
         %d_RX2reflector = reshape(sqrt((array_x_m-reflector_cart_v(kp,1)).^2 + reflector_cart_v(kp,2)^2 + (array_z_m-reflector_cart_v(kp,3)).^2),[1,array_size(1),array_size(2)]);
         % distance between each RX antenna and the point reflector
-      
-        tau = repmat((d_TX2reflector)/c,[length(t_ax),1,1]); % round trip Time of Flight (ToF)
+        
+        
+         tau = repmat((d_TX2reflector)/c,[length(t_ax),1,1]); % round trip Time of Flight (ToF)
         path_loss = repmat(Tx_power/d_TX2reflector,[length(t_ax),1,1]);
         pt_signal = (path_loss.*exp(1j * 2 * pi * fc * tau)).* exp(1j * 2*pi * As * t_ax .*tau); % beat signal from a single point reflector
         

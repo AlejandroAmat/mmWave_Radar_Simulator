@@ -5,10 +5,10 @@ function  showPCloud(Pcloud, range)
     
     %a = length(range());
     %for i=1:length(range)
-    pointsTotal = [pointsTotal; [0,0,1]];
-    pointsTotal = [pointsTotal; [0,range,1]];
-    pointsTotal = [pointsTotal; [-range/2,range/2,1]];
-    pointsTotal = [pointsTotal; [range/2,range/2,1]];
+    pointsTotal = [pointsTotal; [range(1,1),range(1,2),range(1,3)]];
+    pointsTotal = [pointsTotal; [range(2,1),range(2,2),range(2,3)]];
+    pointsTotal = [pointsTotal; [range(3,1),range(3,2),range(3,3)]];
+    pointsTotal = [pointsTotal; [range(4,1),range(4,2),range(4,3)]];
 
     %end
  

@@ -1,0 +1,141 @@
+function [xv] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz, precision, max_iters, rate)
+    
+    xv=zeros(4,3);
+    % Wall [0, y, z]
+    iters = 0;
+    previous_step_size = 1.0;
+    total_gradient_sx = 0.0;
+    total_gradient_sy = 0.0;
+    total_gradient_sz = 0.0;
+
+    % Gradient Ascent algorithm
+    while previous_step_size > precision && iters < max_iters
+        prev_sx = sx;
+        prev_sy = sy;
+        prev_sz = sz;
+
+        % Calculate gradients
+        [gradient_sx, gradient_sy, gradient_sz] = Gradient(c1, c2, ax, ay, az, sx, sy, sz, ux, uy, uz);
+
+        total_gradient_sx = total_gradient_sx + gradient_sx;
+        total_gradient_sy = total_gradient_sy + gradient_sy;
+        total_gradient_sz = total_gradient_sz + gradient_sz;
+
+        % Update variables
+        sx = -range/2;
+        sy = max(0.0, min(sy + rate * total_gradient_sy, range));
+        sz = max(0.0, min(sz + rate * total_gradient_sz, 2.0));
+
+        % Calculate step size
+        previous_step_size = abs(sx - prev_sx) + abs(sy - prev_sy) + abs(sz - prev_sz);
+        iters = iters + 1;
+    end
+
+    xv(1,1)= sx;
+    xv(1,2)= sy;
+    xv(1,3)= sz;
+    
+
+    % Wall [15, y, z]
+    iters = 0;
+    previous_step_size = 1.0;
+    total_gradient_sx = 0.0;
+    total_gradient_sy = 0.0;
+    total_gradient_sz = 0.0;
+
+    % Gradient Ascent algorithm
+    while previous_step_size > precision && iters < max_iters
+        prev_sx = sx;
+        prev_sy = sy;
+        prev_sz = sz;
+
+        % Calculate gradients
+        [gradient_sx, gradient_sy, gradient_sz] = Gradient(c1, c2, ax, ay, az, sx, sy, sz, ux, uy, uz);
+
+        total_gradient_sx = total_gradient_sx + gradient_sx;
+        total_gradient_sy = total_gradient_sy + gradient_sy;
+        total_gradient_sz = total_gradient_sz + gradient_sz;
+
+        % Update variables
+        sx = range/2;
+        sy = max(0.0, min(sy + rate * total_gradient_sy, range));
+        sz = max(0.0, min(sz + rate * total_gradient_sz, 2.0));
+
+        % Calculate step size
+        previous_step_size = abs(sx - prev_sx) + abs(sy - prev_sy) + abs(sz - prev_sz);
+        iters = iters + 1;
+    end
+
+ 
+    xv(2,1)= sx;
+    xv(2,2)= sy;
+    xv(2,3)= sz;
+
+    % Wall [z, 0, z]
+    iters = 0;
+    previous_step_size = 1.0;
+    total_gradient_sx = 0.0;
+    total_gradient_sy = 0.0;
+    total_gradient_sz = 0.0;
+
+    % Gradient Ascent algorithm
+    while previous_step_size > precision && iters < max_iters
+        prev_sx = sx;
+        prev_sy = sy;
+        prev_sz = sz;
+
+        % Calculate gradients
+        [gradient_sx, gradient_sy, gradient_sz] = Gradient(c1, c2, ax, ay, az, sx, sy, sz, ux, uy, uz);
+
+        total_gradient_sx = total_gradient_sx + gradient_sx;
+        total_gradient_sy = total_gradient_sy + gradient_sy;
+        total_gradient_sz = total_gradient_sz + gradient_sz;
+
+        sx = max(-range/2, min(sy + rate * total_gradient_sx, range/2));
+        sy = 0.0;
+        sz = max(0.0, min(sz + rate * total_gradient_sz, 2.0));
+
+        % Calculate step size
+        previous_step_size = abs(sx - prev_sx) + abs(sy - prev_sy) + abs(sz - prev_sz);
+        iters = iters + 1;
+    end
+
+    xv(3,1)= sx;
+    xv(3,2)= sy;
+    xv(3,3)= sz;
+
+    
+    % Wall [x, 15, z]
+    iters = 0;
+    previous_step_size = 1.0;
+    total_gradient_sx = 0.0;
+    total_gradient_sy = 0.0;
+    total_gradient_sz = 0.0;
+    
+    % Gradient Ascent algorithm
+    while previous_step_size > precision && iters < max_iters
+        prev_sx = sx;
+        prev_sy = sy;
+        prev_sz = sz;
+    
+        % Calculate gradients
+        [gradient_sx, gradient_sy, gradient_sz] = Gradient(c1, c2, ax, ay, az, sx, sy, sz, ux, uy, uz);
+    
+        total_gradient_sx = total_gradient_sx + gradient_sx;
+        total_gradient_sy = total_gradient_sy + gradient_sy;
+        total_gradient_sz = total_gradient_sz + gradient_sz;
+    
+        % Update variables
+        sx = max(-range/2, min(sx + rate * total_gradient_sx, range/2));
+        sy = range;
+        sz = max(0.0, min(sz + rate * total_gradient_sz, 2.0));
+    
+        % Calculate step size
+        previous_step_size = abs(sx - prev_sx) + abs(sy - prev_sy) + abs(sz - prev_sz);
+        iters = iters + 1;
+    end
+    
+    xv(4,1)= sx;
+    xv(4,2)= sy;
+    xv(4,3)= sz;
+end

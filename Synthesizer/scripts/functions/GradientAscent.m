@@ -1,13 +1,16 @@
-function [xv] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz, precision, max_iters, rate)
-    
-    xv=zeros(4,3);
+function [x, y, z, ind] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz, precision, max_iters, rate)
+    x = 0;
+    y = 0;
+    z = 0;
+    maximum = 10000000;
+
     % Wall [0, y, z]
     iters = 0;
     previous_step_size = 1.0;
     total_gradient_sx = 0.0;
     total_gradient_sy = 0.0;
     total_gradient_sz = 0.0;
-        
+
     % Gradient Ascent algorithm
     while previous_step_size > precision && iters < max_iters
         prev_sx = sx;
@@ -31,12 +34,15 @@ function [xv] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz,
         iters = iters + 1;
     end
 
-    xv(3,1)= sx;
-    xv(3,2)= sy;
-    xv(3,3)= sz;
-    sx=0;
-    sy=0;
-    sz=0;
+    % Calculate the final value of f
+    f = (c1 + (c2 / (sqrt((ax - sx)^2 + (ay - sy)^2 + (az - sz)^2) * sqrt((sx - ux)^2 + (sy - uy)^2 + (sz - uz)^2))))^2;
+    if f < maximum
+        ind=3;
+        maximum = f;
+        x = sx;
+        y = sy;
+        z = sz;
+    end
 
     % Wall [15, y, z]
     iters = 0;
@@ -68,14 +74,15 @@ function [xv] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz,
         iters = iters + 1;
     end
 
- 
-    xv(4,1)= sx;
-    xv(4,2)= sy;
-    xv(4,3)= sz;
-
-    sx=0;
-    sy=0;
-    sz=0;
+    % Calculate the final value of f
+    f = (c1 + (c2 / (sqrt((ax - sx)^2 + (ay - sy)^2 + (az - sz)^2) * sqrt((sx - ux)^2 + (sy - uy)^2 + (sz - uz)^2))))^2;
+    if f < maximum
+        maximum = f;
+        ind=4;
+        x = sx;
+        y = sy;
+        z = sz;
+    end
 
     % Wall [z, 0, z]
     iters = 0;
@@ -106,14 +113,17 @@ function [xv] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz,
         iters = iters + 1;
     end
 
-    xv(1,1)= sx;
-    xv(1,2)= sy;
-    xv(1,3)= sz;
-    
-    sx=0;
-    sy=0;
-    sz=0;
-    
+    % Calculate the final value of f
+    f = (c1 + (c2 / (sqrt((ax - sx)^2 + (ay - sy)^2 + (az - sz)^2) * sqrt((sx - ux)^2 + (sy - uy)^2 + (sz - uz)^2))))^2;
+    if f < maximum
+        maximum = f;
+        ind=1;
+        x = sx;
+        y = sy;
+        z = sz;
+    end
+
+    maximum = sqrt(maximum);
     % Wall [x, 15, z]
     iters = 0;
     previous_step_size = 1.0;
@@ -144,7 +154,13 @@ function [xv] = GradientAscent(range,c1, c2, ax, ay, az, ux, uy, uz, sx, sy, sz,
         iters = iters + 1;
     end
     
-    xv(2,1)= sx;
-    xv(2,2)= sy;
-    xv(2,3)= sz;
+    % Calculate the final value of f
+    f = (c1 + (c2 / (sqrt((ax - sx)^2 + (ay - sy)^2 + (az - sz)^2) * sqrt((sx - ux)^2 + (sy - uy)^2 + (sz - uz)^2))))^2;
+    if f < maximum
+        ind=2;
+        maximum = f;
+        x = sx;
+        y = sy;
+        z = sz;
+    end
 end

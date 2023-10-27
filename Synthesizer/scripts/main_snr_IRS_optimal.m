@@ -45,7 +45,8 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
     az=1;
     
     pointsTotal = [0,0,0];
-
+    
+    
     for x=1:10
         for z=1:20
             point=[0.1*x-0.5,-0.50,z*0.1];
@@ -93,7 +94,9 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
         users = file_name(12);
         modal = file_name(6:11);
         
-    
+    X_Coord = [linspace(-range/2, range/2,100); linspace(-range/2, range/2,100); linspace(-range/2, -range/2,100); linspace(range/2, range/2,100)];
+     Y_Coord = [linspace(0 ,0,100); linspace(range ,range,100);linspace(0 ,range,100); linspace(0 ,range,100)];
+    Z_Coord = linspace(0,2,10); 
         
      
      new_folder=['../results/SNR/','Optimal', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
@@ -141,9 +144,9 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
  positions = ones(600,4,users,3)
 
 
- X_Coord = [linspace(-range/2, range/2,100); linspace(-range/2, range/2,100); linspace(-range/2, -range/2,100); linspace(range/2, range/2,100)];
- Y_Coord = [linspace(0 ,0,100); linspace(range ,range,100);linspace(0 ,range,100); linspace(0 ,range,100)];
- Z_Coord = linspace(0,2,10); 
+ X_Coord = [linspace(-range/2, range/2,50); linspace(-range/2, range/2,50); linspace(-range/2, -range/2,50); linspace(range/2, range/2,50)];
+ Y_Coord = [linspace(0 ,0,50); linspace(range ,range,50);linspace(0 ,range,50); linspace(0 ,range,50)];
+ Z_Coord = linspace(0,2,6); 
 
     for CAD_idx = 1:600
          close all;
@@ -205,9 +208,9 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
         car_v.CAD_idx = CAD_idx;
         car_v.N_pt = length(ptCloud.Location);
         car_v.cart_v = ptCloud.Location;
-        car_v.lim = [min(ptCloud.Location);max(ptCloud.Location)]; % find the limits in all three dimensions 
-        [bbox_x, bbox_y, bbox_z] = meshgrid(car_v.lim(:,1),car_v.lim(:,2),car_v.lim(:,3)); % 8 vertices of the bounding box of the point cloud
-        car_v.bbox = [bbox_x(:), bbox_y(:), bbox_z(:)]; 
+       % car_v.lim = [min(ptCloud.Location);max(ptCloud.Location)]; % find the limits in all three dimensions 
+       % [bbox_x, bbox_y, bbox_z] = meshgrid(car_v.lim(:,1),car_v.lim(:,2),car_v.lim(:,3)); % 8 vertices of the bounding box of the point cloud
+        %car_v.bbox = [bbox_x(:), bbox_y(:), bbox_z(:)]; 
         %clear cart_v bbox N_pt car_idx;
         car1_v_origin = car_v;
         % car_v = car_v_struct;
@@ -228,14 +231,34 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
        
 
 
-       pos=GradientAscent(range,1, 8, ax, ay, az, ux, uy, 1, sx, sy, sz, 0.001, 1000000, 0.001)
+       [x,y,z,ind]=GradientAscent(range,1, 8, ax, ay, az, ux, uy, 1, sx, sy, sz, 0.001, 1000000, 0.001)
+            location = [x,y,z];
+            SNR_obtain = SNRRand(users, ind, ptCloud.Location, location);
 
- 
+            i=0;
+            k=0;
+            SNR_obtainn=zeros(users);
+            while (i<length(SNR_obtain))
+                                SNR_subset = SNR_obtain((1+200*k):200*(k+1) );
+                                SNR_subset_mean = mean(SNR_subset);
+                                SNR_subset_std = std(SNR_subset);
+                                SNR_obtainn(k+1) = SNR_subset_mean;
+                                SNR_output(CAD_idx,ind+4*k) = SNR_subset_mean;
+                                SD_output(CAD_idx,ind+4*k) = SNR_subset_std;
+                                i=i+200;
+                                k=k+1;
+            end
                 for Tx=1:nTx
                     
-                    
-
-                            location = pos(1,:);
+                    if(ind~=Tx)
+                        Similar=zeros(users,1);
+                        SimilarSD=zeros(users,1)
+                        obtained=zeros(users,1);
+                        
+                        for xy=1:50
+                            for z=1:6
+                            if any(obtained~=1)
+                            location = [X_Coord(Tx,xy),Y_Coord(Tx,xy),Z_Coord(z)];
                             SNR = SNRRand(users, Tx, ptCloud.Location, location);
                             
         
@@ -246,14 +269,35 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
                                 SNR_subset = SNR((1+200*k):200*(k+1) );
                                 SNR_subset_mean = mean(SNR_subset);
                                 SNR_subset_std = std(SNR_subset);
-                                SNR_output(CAD_idx,Tx+4*k) = SNR_subset_mean;
-                                SD_output(CAD_idx,Tx+4*k) = SNR_subset_std;
+
+                                if(SNR_subset_mean<SNR_obtainn(k+1)*(1.0075) && SNR_subset_mean>SNR_obtainn(k+1)*(0.9925)&& obtained(k+1)~=1)
+                                   obtained(k+1) = 1;
+                                   SNR_output(CAD_idx,Tx+4*k) = SNR_subset_mean;
+                                   SD_output(CAD_idx,Tx+4*k) = SNR_subset_std;
+                                end
+                                
+                                if(abs(SNR_obtainn(k+1)-Similar(k+1)) > abs(SNR_obtainn(k+1)-SNR_subset_mean))
+                                    Similar(k+1)=SNR_subset_mean;
+                                    SimilarSD(k+1)=SNR_subset_std;
+                                end
+
                                 i=i+200;
                                 k=k+1;
                             end
-
-                    
-              
+                            
+                            if (xy==50 && z==6)
+                                indic = find(obtained==0);
+                                    for o=1:length(indic)
+                                    c=indic(o)
+                                    SNR_output(CAD_idx,Tx+4*(c-1)) = Similar(c);
+                                    SD_output(CAD_idx,Tx+4*(c-1)) = SimilarSD(c);
+                                    
+                                    end
+                            end
+                            
+                            end
+                        end
+                    end
                 end
 
                 

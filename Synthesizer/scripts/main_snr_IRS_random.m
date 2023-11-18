@@ -28,61 +28,20 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
     %Import an STL mesh, returning a PATCH-compatible face-vertex structure
     % fv = stlread('../../w.stl');
     nTx = 4;    
-    % points = fv.Points;
-    % [points_size, cdd] = size(points);
+    fv = stlread('../../w.stl');
+      
+    points = fv.Points;
+    [points_size, cdd] = size(points);
     
     
 
 
-    % %Linear interpolation of the points
-    % pointsX = interp1(1:points_size, points(:,1),linspace(1,points_size,points_size*10));
-    % pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
-    % pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
-    % pointsTotal = [pointsX' pointsY' pointsZ']/6;
-    % ptCloudO = pointCloud(pointsTotal);
-
-    
-     
-    % newPoint = [2, 2, 4];
-    % newPoint2 = [-2,-2,4]
-    % 
-    % pointsTotal = [pointsTotal; newPoint];
-    % pointsTotal = [pointsTotal; newPoint2];
-    % ptCloud = pointCloud(pointsTotal);
-
-    pointsTotal = [0,0,0];
-
-    for x=1:10
-        for z=1:20
-            point=[0.1*x-0.5,-0.50,z*0.1];
-            pointsTotal = [pointsTotal; point];
-        end
-    end
-
-    
-    for x=1:10
-        for z=1:20
-            point=[0.1*x-0.5,0.50,z*0.1];
-            pointsTotal = [pointsTotal; point];
-        end
-    end
-
-    for y=1:10
-        for z=1:20
-            point=[-0.40,0.1*y-0.6,z*0.1];
-            pointsTotal = [pointsTotal; point];
-        end
-    end
-  
-    for y=1:10
-        for z=1:20
-            point=[0.50,0.1*y-0.5,z*0.1];
-            pointsTotal = [pointsTotal; point];
-        end
-    end
-    ptCloud = pointCloud(pointsTotal(2:801, :));
-    %ptCloud = pointCloud(pointsTotal);
-    ptCloudO = ptCloud;
+    %Linear interpolation of the points
+    pointsX = interp1(1:points_size, points(:,1),linspace(1,points_size,points_size*10));
+    pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
+    pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
+    pointsTotal = [pointsX' pointsY' pointsZ']/6;
+    ptCloudO = pointCloud(pointsTotal);
     
     
 
@@ -102,7 +61,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
     
         
      
-     new_folder=['../results/SNR/','RandomIRS', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
+     new_folder=['../results/','IMAGERandomIRS', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
      mkdir( new_folder);  
      %fileID = fopen([new_folder,'/Transformations.txt'],"w");
      % 
@@ -168,7 +127,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
         transf(U,:)={translationx, translationy};
             
                
-        rotationAngles = [0 0 0];
+        rotationAngles = [90 0 0];
         tform = rigidtform3d(rotationAngles,[translationx translationy 0]);
         
         if(U>1)
@@ -191,7 +150,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
          
          
        end
-         showPCloud(ptCloud.Location, radarTX)
+         showPCloud(ptCloud.Location, range)
          title('Original Pointcloud')
        
         % load the surface model
@@ -284,16 +243,16 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
             % 
             %% Modle radar point reflectors in the scene
             %% Modle radar point reflectors in the scene
-            % [visible_cart_v ] = remove_occlusion(car_scene_v); % remove occluded body of the car
-            % try
-            %     reflector_cart_v = model_point_reflector(visible_cart_v,car_scene_v.bbox); % model point reflectors that reflect back to the radar receiver
-            % catch
-            %     continue;
-            % end
-            % 
-            % if isempty(reflector_cart_v)
-            %     continue;
-            % end
+           [visible_cart_v ] = remove_occlusion(car_scene_v); % remove occluded body of the car
+            try
+                reflector_cart_v = model_point_reflector(visible_cart_v,car_scene_v.bbox); % model point reflectors that reflect back to the radar receiver
+            catch
+                continue;
+            end
+
+            if isempty(reflector_cart_v)
+                continue;
+            end
             
             % Visulize the radar point reflectors
             % figure; 
@@ -311,29 +270,56 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
             % showPCloud(reflector_cart_v, range)
             % title('Reflector Model')
             % 
-             % reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
-            showPCloud(car_v.cart_v, radarTX)
-            title('Reflector Model')
+             reflector_cart_v_d = pcdownsample(pointCloud(reflector_cart_v),'gridAverage',0.015);
+            showPCloud(reflector_cart_v_d.Location, range)
+             title('Reflector Model')
 
+               
+                reflector_cart_v_d= reflector_cart_v_d.Location
              
                 
                 for Tx=1:nTx
 
+                 signal_array = simulate_radar_signal(reflector_cart_v_d, radarTX(Tx,:));
 
-                    SNR = SNRRand(users, Tx, ptCloud.Location, radarTX(Tx,:))
+                %% Radar signal processing, generating 3D radar heatmaps
+                 radar_heatmap = radar_dsp(signal_array);
+
+                if(Tx==1)
+                    radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
+                    figure
+                    imagesc(radar_heatmap_top);    
+                    set(gca,'XDir','reverse')
+                    set(gca,'YDir','normal')
+                    colormap jet; caxis([0 1e11]);
+                    set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+    
+                    saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'top.jpg'])
+                end
+                % 
+                % % Visulize the radar heatmap front view
+                radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
+                figure;
+                imagesc(radar_heatmap_front.');    
+                set(gca,'XDir','reverse')
+                colormap jet; caxis([0 1e11]);
+                
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'front.jpg'])
+                    
                     
 
-                    i=0;
-                    k=0;
-                    while (i<length(SNR))
-                        SNR_subset = SNR((1+200*k):200*(k+1) );
-                        SNR_subset_mean = mean(SNR_subset);
-                        SNR_subset_std = std(SNR_subset);
-                        SNR_output(CAD_idx,Tx+4*k) = SNR_subset_mean;
-                        SD_output(CAD_idx,Tx+4*k) = SNR_subset_std;
-                        i=i+200;
-                        k=k+1;
-                    end
+                    % i=0;
+                    % k=0;
+                    % while (i<length(SNR))
+                    %     SNR_subset = SNR((1+200*k):200*(k+1) );
+                    %     SNR_subset_mean = mean(SNR_subset);
+                    %     SNR_subset_std = std(SNR_subset);
+                    %     SNR_output(CAD_idx,Tx+4*k) = SNR_subset_mean;
+                    %     SD_output(CAD_idx,Tx+4*k) = SNR_subset_std;
+                    %     i=i+200;
+                    %     k=k+1;
+                    % end
                     
                 %     n=0;   
                 %     l=0;
@@ -450,7 +436,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
             %count_num = count_num + 1
         end
     end
-    save(['../results/',new_folder,'/','SNR.mat'], 'SNR_output');
-    save(['../results/',new_folder,'/','SD.mat'], 'SD_output');
+    % save(['../results/',new_folder,'/','SNR.mat'], 'SNR_output');
+    % save(['../results/',new_folder,'/','SD.mat'], 'SD_output');
     end
 end

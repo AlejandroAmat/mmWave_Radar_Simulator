@@ -41,7 +41,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_exhaustive
     pointsY = interp1(1:points_size, points(:,2),linspace(1,points_size,points_size*10));
     pointsZ = interp1(1:points_size, points(:,3),linspace(1,points_size,points_size*10));
     pointsTotal = [pointsX' pointsY' pointsZ']/6;
-    ptCloudD = pointCloud(pointsTotal);
+    ptCloudDEG = pointCloud(pointsTotal);
 
 
 
@@ -176,7 +176,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_exhaustive
              end
         else
             ptCloud = pctransform(ptCloudO,tform);
-            ptCloudDEG = pctransform(ptCloudD, tform)
+            ptCloudDEG = pctransform(ptCloudDEG, tform)
         end
          
          
@@ -307,7 +307,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_exhaustive
                     a=maximSNR(us,:);
                     [minSNR, minIndex]= min(maximSNR(:,us));
                     
-                    signal_array = simulate_radar_signal(reflector_cart_v_d, [X_Coord(minIndex,min_index(minIndex,us,1)),Y_Coord(minIndex,min_index(minIndex,us,1)),Z_Coord(min_index(minIndex,us,2))]);
+                    signal_array = simulate_radar_signal(reflector_cart_v_d, [X_Coord(minIndex,min_index(minIndex,us,1)),Y_Coord(minIndex,min_index(minIndex,us,1)),1]);
 
                      %% Radar signal processing, generating 3D radar heatmaps
                     radar_heatmap = radar_dsp(signal_array);
@@ -361,7 +361,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_exhaustive
     
                            % The element in the matrix that is most similar to 'value' is matrix(row, col)
 
-                            signal_array = simulate_radar_signal(reflector_cart_v_d, [ X_Coord(i,r), Y_Coord(i,r),Z_Coord(c)]);
+                            signal_array = simulate_radar_signal(reflector_cart_v_d, [ X_Coord(i,r), Y_Coord(i,r),1]);
 
                               %% Radar signal processing, generating 3D radar heatmaps
                              radar_heatmap = radar_dsp(signal_array);

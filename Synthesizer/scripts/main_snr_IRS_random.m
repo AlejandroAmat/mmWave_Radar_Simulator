@@ -61,9 +61,9 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
     
         
      
-     new_folder=['../results/','IMAGERandomIRS', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
+     new_folder=['../results/','IMAGERandomIRSRot', '-Pow', num2str(Tx_power),'dB-Range', num2str(range), 'm-Users', num2str(users), '-', modal];
      mkdir( new_folder);  
-     %fileID = fopen([new_folder,'/Transformations.txt'],"w");
+     fileID = fopen([new_folder,'/Transformations.txt'],"w");
      % 
     % Perform Delaunay triangulation
     % load('../../CAD_model_1.mat');
@@ -78,7 +78,7 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
     x_data = zeros(users,600);
     y_data = zeros(users, 600);
 
-    transf = cell(users, 2);
+    transf = cell(users, 3);
 
  for U = 1:users
     line = fgetl(fid);
@@ -123,12 +123,15 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
 
         translationx =x_data(U,CAD_idx);
         translationy = y_data(U,CAD_idx) + range/2; 
-        
-        transf(U,:)={translationx, translationy};
+         randomang= rand()*360; 
+        transf(U,:)={translationx, translationy,randomang};
             
                
-        rotationAngles = [90 0 0];
+         randomang= rand()*360;      
+        rotationAngles2 = [90 0 0];
+        rotationAngles = [90 0 randomang];
         tform = rigidtform3d(rotationAngles,[translationx translationy 0]);
+        tform2 = rigidtform3d(rotationAngles2,[translationx translationy 0]);
         
         if(U>1)
              if(U==2)
@@ -287,25 +290,82 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_random
 
                 if(Tx==1)
                     radar_heatmap_top = squeeze(max(radar_heatmap,[],3));
+                    save(['../results/',new_folder,'/',num2str(CAD_idx),'-',num2str(Tx), 'top.mat'], 'radar_heatmap_top');
                     figure
                     imagesc(radar_heatmap_top);    
                     set(gca,'XDir','reverse')
                     set(gca,'YDir','normal')
                     colormap jet; caxis([0 1e11]);
+                    colorbar;
                     set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
     
                     saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'top.jpg'])
-                end
-                % 
-                % % Visulize the radar heatmap front view
+
+
                 radar_heatmap_front = squeeze(max(radar_heatmap,[],1));
+                save(['../results/',new_folder,'/',num2str(CAD_idx),'-',num2str(Tx), 'front.mat'], 'radar_heatmap_front');
                 figure;
                 imagesc(radar_heatmap_front.');    
                 set(gca,'XDir','reverse')
                 colormap jet; caxis([0 1e11]);
-                
+                colorbar;
                 set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
                 saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(Tx), 'front.jpg'])
+
+
+                 fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                    
+                            for i = 1:3
+                                fprintf(fileID, '%.7f ', (transf{U, i})); 
+                            end
+
+                            fprintf(fileID, ']\n');
+
+                   
+                end
+
+                if (Tx==2)
+                    
+                radar_heatmap_back = squeeze(max(radar_heatmap,[],1));
+                save(['../results/',new_folder,'/',num2str(CAD_idx),'-',num2str(Tx), 'back.mat'], 'radar_heatmap_back');
+                figure;
+                imagesc(radar_heatmap_back.');    
+                colormap jet; caxis([0 1e11]);
+                colorbar;
+                set(gca,'FontSize',30)
+                saveas(gcf,['../results/', new_folder, '/', num2str(CAD_idx), '-', num2str(Tx), 'Back.jpg'])
+                end
+
+                if (Tx==3)
+                    radar_heatmap_front = squeeze(max(radar_heatmap,[],2));
+                save(['../results/',new_folder,'/',num2str(CAD_idx),'-',num2str(Tx), 'side1.mat'], 'radar_heatmap_front');
+                figure;
+                imagesc(radar_heatmap_front.');    
+                set(gca,'XDir','reverse')
+                colormap jet; caxis([0 1e11]);
+               colorbar;
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'side1.jpg'])
+
+
+                end
+               
+                if (Tx==4)
+
+                     radar_heatmap_front = squeeze(max(radar_heatmap,[],2));
+                     
+                save(['../results/',new_folder,'/',num2str(CAD_idx),'-',num2str(Tx), 'side2.mat'], 'radar_heatmap_front');
+                figure;
+                imagesc(radar_heatmap_front.');    
+                
+                colormap jet; caxis([0 1e11]);
+                colorbar;
+                set(gca,'FontSize',30) % Creates an axes and sets its FontSize to 18
+                saveas(gcf,['../results/',new_folder,'/' num2str(CAD_idx),'-',num2str(Tx), 'side2.jpg'])
+                
+
+
+                end
                     
                     
 

@@ -309,6 +309,14 @@ function [radar_heatmap, visible_cart_v] = main_snr_IRS_optimal
 
                 saveas(gcf,['../results/',new_folder,'/', num2str(CAD_idx),'-',num2str(ind), 'top.jpg'])
 
+                fprintf(fileID, '%s--->[', num2str(CAD_idx)); 
+                    
+                            for i = 1:3
+                                fprintf(fileID, '%.7f ', (transf{1, i})); 
+                            end
+
+                            fprintf(fileID, ']\n');
+
                      if (ind==2)
                     
                 radar_heatmap_back = squeeze(max(radar_heatmap,[],1));

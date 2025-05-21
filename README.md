@@ -98,12 +98,3 @@ This simulator is valuable for various applications:
 - Redirected walking algorithm development and testing
 - Real-time 3D user pose estimation
 
-## Future Work
-
-Ongoing and planned enhancements include:
-- Integration with real-time VR platforms
-- Support for more complex environments and obstacles
-- Advanced neural network architectures for improved tracking accuracy
-- Extended evaluation in multi-room environments
-- Implementation of dynamic IRS elements for adaptable environments
-- Development of real-time optimization algorithms with reduced computational complexity

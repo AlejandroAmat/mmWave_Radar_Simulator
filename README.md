@@ -20,6 +20,7 @@ Our approach leverages advanced mmWave radar techniques to create high-resolutio
 Our simulation represents a room-scale VR environment where multiple users can be present simultaneously. Users are represented by bounding boxes for PSNR computation and coverage analysis:
 
 ![Room with Humans](media/room.png)
+
 *Fig. 1: Simulation environment showing 3 users represented as bounding boxes. Each user's position is tracked and used for PSNR computation and coverage analysis.*
 
 ## User Movement Simulation
@@ -27,6 +28,7 @@ Our simulation represents a room-scale VR environment where multiple users can b
 The simulator tracks both the physical paths (actual user movement in the real world) and virtual paths (perceived movement in the VR environment), which is crucial for redirected walking techniques:
 
 ![Virtual and Physical Paths](media/path.png)
+
 *Fig. 2: Visualization of both physical (solid lines) and virtual (dashed lines) paths that users follow in the VR environment. This demonstrates how redirected walking techniques can be used to optimize movement in constrained physical spaces while maintaining immersion.*
 
 ## Performance Comparison
@@ -34,6 +36,7 @@ The simulator tracks both the physical paths (actual user movement in the real w
 We compare different IRS placement techniques to demonstrate the effectiveness of our approach:
 
 ![PSNR Comparison](media/psnr.png)
+
 *Fig. 3: PSNR comparison between different IRS placement strategies: No IRS (baseline), Random placement, Exhaustive search optimization, and our Optimal IRS placement algorithm. The graph demonstrates significant improvements in signal quality and homogeneity with our approach.*
 
 ## Algorithms Implemented
